@@ -550,7 +550,7 @@ def random_binomial_btpe(bitgen, n, p):
     p3 = p2 + c / laml
     p4 = p3 + c / lamr
 
-    case = 0
+
     y = 0
     while 1:
         # case == 0:
@@ -558,47 +558,76 @@ def random_binomial_btpe(bitgen, n, p):
         u = next_double(bitgen) * p4
         v = next_double(bitgen)
         if (u > p1):
-            case = 1
-        else:
-            y = int(xm - p1 * v + u)
-            case = 6
-
-        if case == 1:
+            # case = 1
             if (u > p2):
-                case = 2
+                # case = 2
+                if (u > p3):
+                    # case = 3
+                    y = int(xr - np.log(v) / lamr)
+                    if ((y > n) or (v == 0.0)):
+                        # case = 0
+                        continue
+                    v = v * (u - p3) * lamr
+                    # case = 4
+                else:
+                    y = int(xl + np.log(v) / laml)
+                    if ((y < 0) or (v == 0.0)):
+                        # case = 0
+                        continue
+                    v = v * (u - p2) * laml
+                    # case = 4
             else:
                 x = xl + (u - p1) / c
                 v = v * c + 1.0 - abs(m - x + 0.5) / p1
                 if (v > 1.0):
-                    case = 0
+                    # case = 0
                     continue
                 y = int(x)
-                case = 4
+                # case = 4
 
-        if case == 2:
-            if (u > p3):
-                case = 3
-            else:
-                y = int(xl + np.log(v) / laml)
-                if ((y < 0) or (v == 0.0)):
-                    case = 0
-                    continue
-                v = v * (u - p2) * laml
-                case = 4
-
-        if case == 3:
-            y = int(xr - np.log(v) / lamr)
-            if ((y > n) or (v == 0.0)):
-                case = 0
-                continue
-            v = v * (u - p3) * lamr
-            case = 4
-
-        if case == 4:
+            # assert case == 4
             k = abs(y - m)
             if ((k > 20) and (k < ((nrq) / 2.0 - 1))):
-                case = 5
+                # case = 5
+                rho = (k / (nrq)) * \
+                      ((k * (k / 3.0 + 0.625) + 0.16666666666666666) /
+                       nrq + 0.5)
+                t = -k * k / (2 * nrq)
+                A = np.log(v)
+                if (A < (t - rho)):
+                    # case = 6
+                    break
+                else:
+                    if (A > (t + rho)):
+                        # case = 0
+                        continue
+                    x1 = y + 1
+                    f1 = m + 1
+                    z = n + 1 - m
+                    w = n - y + 1
+                    x2 = x1 * x1
+                    f2 = f1 * f1
+                    z2 = z * z
+                    w2 = w * w
+                    if (A > (xm * np.log(f1 / x1) + (n - m + 0.5) * np.log(
+                            z / w) +
+                             (y - m) * np.log(w * r / (x1 * q)) +
+                             (13680. - (462. - (
+                                     132. - (99. - 140. / f2) / f2) / f2)
+                              / f2) / f1 / 166320. +
+                             (13680. - (462. - (
+                                     132. - (99. - 140. / z2) / z2) / z2)
+                              / z2) / z / 166320. +
+                             (13680. - (462. - (
+                                     132. - (99. - 140. / x2) / x2) / x2)
+                              / x2) / x1 / 166320. +
+                             (13680. - (462. - (
+                                     132. - (99. - 140. / w2) / w2) / w2)
+                              / w2) / w / 66320.)):
+                        # case = 0
+                        continue
             else:
+                # Case 4 continued here
                 s = r / q
                 a = s * (n + 1)
                 F = 1.0
@@ -609,46 +638,18 @@ def random_binomial_btpe(bitgen, n, p):
                     for i in range(m + 1, y + 1):
                         F = F / (a / i - s)
                 if (v > F):
-                    case = 0
+                    # case = 0
                     continue
-                case = 6
-        if case == 5:
-            rho = (k / (nrq)) * \
-                  ((k * (k / 3.0 + 0.625) + 0.16666666666666666) /
-                   nrq + 0.5)
-            t = -k * k / (2 * nrq)
-            A = np.log(v)
-            if (A < (t - rho)):
-                case = 6
-            else:
-                if (A > (t + rho)):
-                    case = 0
-                    continue
-                x1 = y + 1
-                f1 = m + 1
-                z = n + 1 - m
-                w = n - y + 1
-                x2 = x1 * x1
-                f2 = f1 * f1
-                z2 = z * z
-                w2 = w * w
-                if (A > (xm * np.log(f1 / x1) + (n - m + 0.5) * np.log(z / w) +
-                         (y - m) * np.log(w * r / (x1 * q)) +
-                         (13680. - (462. - (132. - (99. - 140. / f2) / f2) / f2)
-                          / f2) / f1 / 166320. +
-                         (13680. - (462. - (132. - (99. - 140. / z2) / z2) / z2)
-                          / z2) / z / 166320. +
-                         (13680. - (462. - (132. - (99. - 140. / x2) / x2) / x2)
-                          / x2) / x1 / 166320. +
-                         (13680. - (462. - (132. - (99. - 140. / w2) / w2) / w2)
-                          / w2) / w / 66320.)):
-                    case = 0
-                    continue
-        if case == 6:
-            if (p > 0.5):
-                y = n - y
+                # case = 6
+                break
 
-            return y
+    # case == 6:
+    y = int(xm - p1 * v + u)
+
+    if (p > 0.5):
+        y = n - y
+
+    return y
 
 
 @register_jitable
